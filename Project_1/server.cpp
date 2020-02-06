@@ -1,19 +1,6 @@
-#include <iostream>
-#include <string>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <netdb.h>
-#include <sys/uio.h>
-#include <sys/time.h>
-#include <sys/wait.h>
-#include <fcntl.h>
-#include <fstream>
+
+#include "header.h"
+
 using namespace std;
 //Server side
 int main(int argc, char *argv[])
@@ -25,9 +12,17 @@ int main(int argc, char *argv[])
         exit(0);
     }
     //grab the port number
-    int port = atoi(argv[1]);
+    int port;
+    if (port = atoi(argv[1]) == 0){
+        cerr << "Invalid port number" << endl;
+    }
+    
+    // load the key for DES
+    string key = "10101010101110110000100100011000001001110011011011001101";
+
+
     //buffer to send and receive messages with
-    char msg[1500];
+    char msg[MAX_BUFFER_LENGTH];
      
     //setup a socket and connection tools
     sockaddr_in servAddr;
@@ -38,7 +33,7 @@ int main(int argc, char *argv[])
  
     //open stream oriented socket with internet address
     //also keep track of the socket descriptor
-    int serverSd = socket(AF_INET, SOCK_STREAM, 0);
+    int serverSd = socket(AF_INET, SOCK_STREAM, 0); // create tcp socket
     if(serverSd < 0)
     {
         cerr << "Error establishing the server socket" << endl;
@@ -53,7 +48,7 @@ int main(int argc, char *argv[])
         exit(0);
     }
     cout << "Waiting for a client to connect..." << endl;
-    //listen for up to 5 requests at a time
+    //listen for up to 5 pending requests at a time
     listen(serverSd, 5);
     //receive a request from client using accept
     //we need a new address to connect with the client
@@ -88,6 +83,13 @@ int main(int argc, char *argv[])
         cout << ">";
         string data;
         getline(cin, data);
+
+        // encrypt data 
+        string round_keys[ITERATION];
+        generate_keys(key, round_keys);
+        string encryptedMessage = DES_encryption(data, round_keys);
+
+        // copy encrypted to message
         memset(&msg, 0, sizeof(msg)); //clear the buffer
         strcpy(msg, data.c_str());
         if(data == "exit")
@@ -96,6 +98,12 @@ int main(int argc, char *argv[])
             send(newSd, (char*)&msg, strlen(msg), 0);
             break;
         }
+
+        // print out shared key, mesage, encrypted text
+        cout << "Shared key is :" << key << endl;
+        cout << "Plain text message is " << msg << endl;
+        cout << "Cipher text is " << encryptedMessage << endl;
+        
         //send the message to client
         bytesWritten += send(newSd, (char*)&msg, strlen(msg), 0);
     }
