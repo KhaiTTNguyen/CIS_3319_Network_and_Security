@@ -5,14 +5,30 @@
 int main(int argc, char *argv[])
 {
     //we need 2 things: ip address and port number, in that order
-    if(argc != 3)
+    if(argc != 4)
     {
-        cerr << "Usage: ip_address port" << endl; exit(0); 
+        cerr << "Usage: ip_address port key_file" << endl; exit(0); 
     } //grab the IP address and port number 
     char *serverIp = argv[1]; int port = atoi(argv[2]); 
 
-    // load the key for DES
-    string key = "10101010101110110000100100011000001001110011011011001101";
+    FILE * fp;
+    // Open the file  
+    fp = fopen(argv[3], "r");
+    if (fp == NULL) { 
+        printf("Could not open file %s", argv[3]); 
+        return 0; 
+    } 
+
+    string key = "";
+    char chunk[MAX_BUFFER_LENGTH];
+    while(fgets(chunk, sizeof(chunk), fp) != NULL) {
+        key += string(chunk);
+    }
+
+    // Close the file 
+    fclose(fp); 
+
+    //----------------------- load the key for DES ------------------------
     string encryption_round_keys[ITERATION];
     string decryption_round_keys[ITERATION];
 
