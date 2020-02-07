@@ -12,14 +12,23 @@ int main(int argc, char *argv[])
         exit(0);
     }
     //grab the port number
-    int port;
-    if (port = atoi(argv[1]) == 0){
-        cerr << "Invalid port number" << endl;
-    }
+    int port = atoi(argv[1]);
     
-    // load the key for DES
+    // ---------------------- load the key for DES -------------------------
     string key = "10101010101110110000100100011000001001110011011011001101";
+    string encryption_round_keys[ITERATION];
+    string decryption_round_keys[ITERATION];
 
+    generate_keys(key, encryption_round_keys);
+    
+    int i = 15;
+    int j = 0;
+    while(i > -1)
+    {
+        encryption_round_keys[i] = decryption_round_keys[j];
+        i--;
+        j++;
+    }
 
     //buffer to send and receive messages with
     char msg[MAX_BUFFER_LENGTH];
@@ -33,12 +42,22 @@ int main(int argc, char *argv[])
  
     //open stream oriented socket with internet address
     //also keep track of the socket descriptor
-    int serverSd = socket(AF_INET, SOCK_STREAM, 0); // create tcp socket
+    int serverSd = socket(AF_INET, SOCK_STREAM, 0);
     if(serverSd < 0)
     {
         cerr << "Error establishing the server socket" << endl;
         exit(0);
     }
+
+        // in case there is an existing server socket - reuse it
+    // if not, when recreating socket with same code, bind error happens, only after 30-60 seconds a new socket is created successfully.
+    int yes=1;
+    if (setsockopt(serverSd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1) {
+        perror("setsockopt");
+        exit(1);
+    }
+
+
     //bind the socket to its local address
     int bindStatus = bind(serverSd, (struct sockaddr*) &servAddr, 
         sizeof(servAddr));
@@ -48,7 +67,7 @@ int main(int argc, char *argv[])
         exit(0);
     }
     cout << "Waiting for a client to connect..." << endl;
-    //listen for up to 5 pending requests at a time
+    //listen for up to 5 requests at a time
     listen(serverSd, 5);
     //receive a request from client using accept
     //we need a new address to connect with the client
@@ -73,6 +92,8 @@ int main(int argc, char *argv[])
         //receive a message from the client (listen)
         cout << "Awaiting client response..." << endl;
         memset(&msg, 0, sizeof(msg));//clear the buffer
+
+         /* ------------------------- Decryption ------------------------------*/
         bytesRead += recv(newSd, (char*)&msg, sizeof(msg), 0);
         if(!strcmp(msg, "exit"))
         {
@@ -80,22 +101,21 @@ int main(int argc, char *argv[])
             break;
         }
         cout << "Client: " << msg << endl;
+
+        /*------------------------ Encryption ----------------------------*/
+
         cout << ">";
         string data;
         getline(cin, data);
 
-        // encrypt data 
-        string round_keys[ITERATION];
-        generate_keys(key, round_keys);
-        string encryptedMessage = DES_encryption(data, round_keys);
+        string encryptedMessage = DES_encryption(data, encryption_round_keys);
 
-        // copy encrypted to message
         memset(&msg, 0, sizeof(msg)); //clear the buffer
-        strcpy(msg, data.c_str());
+        strcpy(msg, encryptedMessage.c_str());
         if(data == "exit")
         {
             //send to the client that server has closed the connection
-            send(newSd, (char*)&msg, strlen(msg), 0);
+            send(newSd, (char*)&data, strlen(data.c_str()), 0);
             break;
         }
 
@@ -103,7 +123,7 @@ int main(int argc, char *argv[])
         cout << "Shared key is :" << key << endl;
         cout << "Plain text message is " << msg << endl;
         cout << "Cipher text is " << encryptedMessage << endl;
-        
+
         //send the message to client
         bytesWritten += send(newSd, (char*)&msg, strlen(msg), 0);
     }

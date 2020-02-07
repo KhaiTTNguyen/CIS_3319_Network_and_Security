@@ -1,20 +1,6 @@
-#include <iostream>
-#include <string>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <netdb.h>
-#include <sys/uio.h>
-#include <sys/time.h>
-#include <sys/wait.h>
-#include <fcntl.h>
-#include <fstream>
-using namespace std;
+
+#include "header.h"
+
 //Client side
 int main(int argc, char *argv[])
 {
@@ -24,8 +10,26 @@ int main(int argc, char *argv[])
         cerr << "Usage: ip_address port" << endl; exit(0); 
     } //grab the IP address and port number 
     char *serverIp = argv[1]; int port = atoi(argv[2]); 
+
+    // load the key for DES
+    string key = "10101010101110110000100100011000001001110011011011001101";
+    string encryption_round_keys[ITERATION];
+    string decryption_round_keys[ITERATION];
+
+    generate_keys(key, encryption_round_keys);
+    
+    int i = 15;
+    int j = 0;
+    while(i > -1)
+    {
+        encryption_round_keys[i] = decryption_round_keys[j];
+        i--;
+        j++;
+    }
+
+
     //create a message buffer 
-    char msg[1500]; 
+    char msg[MAX_BUFFER_LENGTH]; 
     //setup a socket and connection tools 
     struct hostent* host = gethostbyname(serverIp); 
     sockaddr_in sendSockAddr;   
@@ -51,6 +55,9 @@ int main(int argc, char *argv[])
         cout << ">";
         string data;
         getline(cin, data);
+        
+        /*------------------------ Encryption ----------------------------*/
+
         memset(&msg, 0, sizeof(msg));//clear the buffer
         strcpy(msg, data.c_str());
         if(data == "exit")
@@ -61,7 +68,14 @@ int main(int argc, char *argv[])
         bytesWritten += send(clientSd, (char*)&msg, strlen(msg), 0);
         cout << "Awaiting server response..." << endl;
         memset(&msg, 0, sizeof(msg));//clear the buffer
+
+        /* ------------------------- Decryption ------------------------------*/
         bytesRead += recv(clientSd, (char*)&msg, sizeof(msg), 0);
+
+        string decryptedMessage = DES_encryption(string(msg), decryption_round_keys);
+
+        cout<<"Decrypted text:"<<decryptedMessage<<endl;
+
         if(!strcmp(msg, "exit"))
         {
             cout << "Server has quit the session" << endl;

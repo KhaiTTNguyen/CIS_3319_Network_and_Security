@@ -4,10 +4,6 @@
 
 #include "header.h"
 
-#include "DES.hpp" 
-#include "fileDES.hpp"
-
-
 
 // https://www.educative.io/edpresso/how-to-implement-the-des-algorithm-in-cpp
 
@@ -116,7 +112,9 @@ string DES_encryption(string plain_text, string round_keys[]){
 		// 3.1. The right half of the plain text is expanded
     	for(int i = 0; i < 48; i++) { 
       		right_expanded += right[expansion_table[i]-1]; 
-    };  // 3.3. The result is xored with a key
+    	}  
+		
+		// 3.3. The result is xored with a key
 		string xored = Xor(round_keys[i], right_expanded);  
 		string res = ""; 
 		// 3.4. The result is divided into 8 equal parts and passed 
