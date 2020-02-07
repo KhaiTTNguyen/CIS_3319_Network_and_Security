@@ -334,7 +334,7 @@ string generatePlain (string cipher_text, string decryption_round_keys[]){
     decrypted += sub_origin;
     start_of_substr += 64;
 
-    while(cipher_text.length() - start_of_substr == 64){
+    while(start_of_substr < cipher_text.length()){
         sub_cip = cipher_text.substr(start_of_substr,64);
         // Applying the algo
         sub_origin = DES_encryption(sub_cip,decryption_round_keys); 
