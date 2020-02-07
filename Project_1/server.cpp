@@ -23,9 +23,8 @@ int main(int argc, char *argv[])
     
     int i = 15;
     int j = 0;
-    while(i > -1)
-    {
-        encryption_round_keys[i] = decryption_round_keys[j];
+    while(i > -1){
+        decryption_round_keys[j] = encryption_round_keys[i];
         i--;
         j++;
     }
@@ -49,14 +48,13 @@ int main(int argc, char *argv[])
         exit(0);
     }
 
-        // in case there is an existing server socket - reuse it
+    // in case there is an existing server socket - reuse it
     // if not, when recreating socket with same code, bind error happens, only after 30-60 seconds a new socket is created successfully.
     int yes=1;
     if (setsockopt(serverSd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1) {
         perror("setsockopt");
         exit(1);
     }
-
 
     //bind the socket to its local address
     int bindStatus = bind(serverSd, (struct sockaddr*) &servAddr, 
@@ -90,51 +88,39 @@ int main(int argc, char *argv[])
     while(1)
     {
         //receive a message from the client (listen)
-        cout << "Awaiting client response..." << endl;
         memset(&msg, 0, sizeof(msg));//clear the buffer
-
+        cout << "Awaiting client response..." << endl;
          /* ------------------------- Decryption ------------------------------*/
         bytesRead += recv(newSd, (char*)&msg, sizeof(msg), 0);
-        if(!strcmp(msg, "exit"))
-        {
-            cout << "Client has quit the session" << endl;
-            break;
-        }
-        cout << "Client: " << msg << endl;
+        string decrypted = generatePlain(string(msg),decryption_round_keys);
+        cout << endl;
+        cout << "Shared key is :" << key << endl;
+        cout << "Cipher text is " << string(msg) << endl;
+        cout << "Client Plain text message is: " << BinaryStringToText(decrypted) << endl;
 
         /*------------------------ Encryption ----------------------------*/
-
+        memset(&msg, 0, sizeof(msg)); //clear the buffer
         cout << ">";
         string data;
         getline(cin, data);
 
-        string encryptedMessage = DES_encryption(data, encryption_round_keys);
-
-        memset(&msg, 0, sizeof(msg)); //clear the buffer
-        strcpy(msg, encryptedMessage.c_str());
-        if(data == "exit")
-        {
-            //send to the client that server has closed the connection
-            send(newSd, (char*)&data, strlen(data.c_str()), 0);
-            break;
-        }
+        string binary_text = TextToBinaryString(data);
+        string encryptedMessage = generateCipher(binary_text, encryption_round_keys);
 
         // print out shared key, mesage, encrypted text
+        cout << endl;
         cout << "Shared key is :" << key << endl;
-        cout << "Plain text message is " << msg << endl;
+        cout << "Plain text message is " << data << endl;
         cout << "Cipher text is " << encryptedMessage << endl;
 
         //send the message to client
+        strcpy(msg, encryptedMessage.c_str());
         bytesWritten += send(newSd, (char*)&msg, strlen(msg), 0);
     }
     //we need to close the socket descriptors after we're all done
     gettimeofday(&end1, NULL);
     close(newSd);
     close(serverSd);
-    cout << "********Session********" << endl;
-    cout << "Bytes written: " << bytesWritten << " Bytes read: " << bytesRead << endl;
-    cout << "Elapsed time: " << (end1.tv_sec - start1.tv_sec) 
-        << " secs" << endl;
-    cout << "Connection closed..." << endl;
+
     return 0;   
 }

@@ -30,6 +30,8 @@
 #include <fcntl.h>
 #include <cmath>
 #include <fstream>
+#include <bitset>
+#include <sstream>
 
 using namespace std;
 
@@ -45,4 +47,9 @@ string shift_left_twice(string key_chunk);
 string Xor(string a, string b);
 
 string DES_encryption(string plain_text, string round_keys[]);
+string TextToBinaryString(string words);
+string BinaryStringToText(string binaryString);
+string generateCipher(string binary_text, string encryption_round_keys[]);
+string generatePlain (string cipher_text, string decryption_round_keys[]);
+
 #endif

@@ -277,3 +277,70 @@ void generate_keys(string key, string round_keys[]){
 
 }
 
+
+string TextToBinaryString(string words) {
+    string binaryString = "";
+    for (char& _char : words) {
+        binaryString +=bitset<8>(_char).to_string();
+	}
+	if (binaryString.length() % 64 != 0){
+		binaryString += '1';
+	}
+	while (binaryString.length() % 64 != 0){
+        binaryString += '0';
+    }
+    return binaryString;
+}
+
+string BinaryStringToText(string binaryString) {
+    string text = "";
+    stringstream sstream(binaryString);
+    while (sstream.good())
+    {
+        bitset<8> bits;
+        sstream >> bits;
+        text += char(bits.to_ulong());
+    }
+    return text;
+}
+
+string generateCipher(string binary_text, string encryption_round_keys[]){
+	    string cipher_text = "";
+    int start_substr = 0;
+    string sub_bin = binary_text.substr(start_substr,64);
+    // Applying the algo
+    string sub_cipher = DES_encryption(sub_bin,encryption_round_keys);
+    cipher_text += sub_cipher;
+    start_substr += 64;
+
+    while(start_substr < binary_text.length()){
+        sub_bin = binary_text.substr(start_substr,64);
+        
+        // Applying the algo
+        sub_cipher = DES_encryption(sub_bin,encryption_round_keys);
+        cipher_text += sub_cipher;
+        start_substr += 64;
+    }
+
+	return cipher_text;
+}
+
+string generatePlain (string cipher_text, string decryption_round_keys[]){
+	string decrypted;
+    int start_of_substr = 0;
+    string sub_cip = cipher_text.substr(start_of_substr,64);
+    // Applying the algo
+    string sub_origin = DES_encryption(sub_cip,decryption_round_keys);
+    decrypted += sub_origin;
+    start_of_substr += 64;
+
+    while(cipher_text.length() - start_of_substr == 64){
+        sub_cip = cipher_text.substr(start_of_substr,64);
+        // Applying the algo
+        sub_origin = DES_encryption(sub_cip,decryption_round_keys); 
+        decrypted += sub_origin;
+        start_of_substr += 64;
+    }
+
+	return decrypted;
+}

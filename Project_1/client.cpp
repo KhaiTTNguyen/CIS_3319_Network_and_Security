@@ -20,13 +20,11 @@ int main(int argc, char *argv[])
     
     int i = 15;
     int j = 0;
-    while(i > -1)
-    {
-        encryption_round_keys[i] = decryption_round_keys[j];
+    while(i > -1){
+        decryption_round_keys[j] = encryption_round_keys[i];
         i--;
         j++;
     }
-
 
     //create a message buffer 
     char msg[MAX_BUFFER_LENGTH]; 
@@ -52,44 +50,35 @@ int main(int argc, char *argv[])
     gettimeofday(&start1, NULL);
     while(1)
     {
+        /*------------------------ Encryption ----------------------------*/
         cout << ">";
         string data;
         getline(cin, data);
-        
-        /*------------------------ Encryption ----------------------------*/
 
-        memset(&msg, 0, sizeof(msg));//clear the buffer
-        strcpy(msg, data.c_str());
-        if(data == "exit")
-        {
-            send(clientSd, (char*)&msg, strlen(msg), 0);
-            break;
-        }
+        string binary_text = TextToBinaryString(data);
+        string encryptedMessage = generateCipher(binary_text, encryption_round_keys);
+
+        // print out shared key, mesage, encrypted text
+        cout << endl;
+        cout << "Shared key is :" << key << endl;
+        cout << "Plain text message is " << data << endl;
+        cout << "Cipher text is " << encryptedMessage << endl;
+
+        //send the message to client
+        strcpy(msg, encryptedMessage.c_str());
         bytesWritten += send(clientSd, (char*)&msg, strlen(msg), 0);
+        
         cout << "Awaiting server response..." << endl;
         memset(&msg, 0, sizeof(msg));//clear the buffer
-
         /* ------------------------- Decryption ------------------------------*/
         bytesRead += recv(clientSd, (char*)&msg, sizeof(msg), 0);
-
-        string decryptedMessage = DES_encryption(string(msg), decryption_round_keys);
-
-        cout<<"Decrypted text:"<<decryptedMessage<<endl;
-
-        if(!strcmp(msg, "exit"))
-        {
-            cout << "Server has quit the session" << endl;
-            break;
-        }
-        cout << "Server: " << msg << endl;
+        string decrypted = generatePlain(string(msg),decryption_round_keys);
+        cout << endl;
+        cout << "Shared key is :" << key << endl;
+        cout << "Cipher text is " << string(msg) << endl;
+        cout << "Client Plain text message is: " << BinaryStringToText(decrypted) << endl;
     }
-    gettimeofday(&end1, NULL);
+
     close(clientSd);
-    cout << "********Session********" << endl;
-    cout << "Bytes written: " << bytesWritten << 
-    " Bytes read: " << bytesRead << endl;
-    cout << "Elapsed time: " << (end1.tv_sec- start1.tv_sec) 
-      << " secs" << endl;
-    cout << "Connection closed" << endl;
     return 0;    
 }
