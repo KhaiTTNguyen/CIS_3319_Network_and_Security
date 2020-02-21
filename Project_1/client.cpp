@@ -1,4 +1,3 @@
-
 #include "header.h"
 
 //Client side
@@ -31,7 +30,7 @@ int main(int argc, char *argv[])
     //----------------------- load the key for DES ------------------------
     string encryption_round_keys[ITERATION];
     string decryption_round_keys[ITERATION];
-
+    cout << "Key is" << key << endl;
     generate_keys(key, encryption_round_keys);
     
     int i = 15;

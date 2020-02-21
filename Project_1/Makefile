@@ -3,13 +3,10 @@
 
 # define a target for the application
 #
-all: tcp_server tcp_client main
+all: tcp_server tcp_client
 
 # define a target to link the application
 #
-
-main: main.cpp 
-	g++ main.cpp -o main
 
 tcp_server: server.cpp function.cpp
 	g++ server.cpp function.cpp -o tcp_server

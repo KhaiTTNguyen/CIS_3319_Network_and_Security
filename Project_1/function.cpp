@@ -103,6 +103,7 @@ string DES_encryption(string plain_text, string round_keys[]){
 	for(int i = 0; i < 64; i++){ 
 		perm += plain_text[initial_permutation[i]-1]; 
 	}  
+
 	// 2. Dividing the result into two equal halves 
 	string left = perm.substr(0, 32); 
 	string right = perm.substr(32, 32);
@@ -113,9 +114,10 @@ string DES_encryption(string plain_text, string round_keys[]){
     	for(int i = 0; i < 48; i++) { 
       		right_expanded += right[expansion_table[i]-1]; 
     	}  
-		
+		cout << "Start XOR-ing 48" << endl;		
 		// 3.3. The result is xored with a key
-		string xored = Xor(round_keys[i], right_expanded);  
+		string xored = Xor_48(round_keys[i], right_expanded);  
+		cout << "XOR-ed 48 done" << endl;
 		string res = ""; 
 		// 3.4. The result is divided into 8 equal parts and passed 
 		// through 8 substitution boxes. After passing through a 
@@ -135,8 +137,9 @@ string DES_encryption(string plain_text, string round_keys[]){
 		for(int i = 0; i < 32; i++){ 
 			perm2 += res[permutation_tab[i]-1]; 
 		}
+		cout << "XOR-ed 32 done" << endl;
 		// 3.6. The result is xored with the left half
-		xored = Xor(perm2, left);
+		xored = Xor_32(perm2, left);
 		// 3.7. The left and the right parts of the plain text are swapped 
 		left = xored; 
 		if(i < 15){ 
@@ -207,19 +210,19 @@ string shift_left_twice(string key_chunk){
     return key_chunk; 
 }
 // Function to compute xor between two strings
-string Xor(string a, string b){ 
-	string result = ""; 
-	int size = b.size();
-	for(int i = 0; i < size; i++){ 
-		if(a[i] != b[i]){ 
-			result += "1"; 
-		}
-		else{ 
-			result += "0"; 
-		} 
-	} 
-	return result; 
+string Xor_32(string a, string b){ 
+	
+	auto result = std::bitset<32>(a) ^ std::bitset<32>(b);	
+	return result.to_string(); 
 } 
+
+string Xor_48(string a, string b){ 
+	
+	auto result = std::bitset<48>(a) ^ std::bitset<48>(b);
+	return result.to_string(); 
+} 
+
+
 // Function to generate the 16 keys.
 void generate_keys(string key, string round_keys[]){
 	// The PC1 table
@@ -283,13 +286,21 @@ string TextToBinaryString(string words) {
     for (char& _char : words) {
         binaryString +=bitset<8>(_char).to_string();
 	}
-	if (binaryString.length() % 64 != 0){
-		binaryString += '1';
-	}
-	while (binaryString.length() % 64 != 0){
-        binaryString += '0';
+
+    int curr_pos = binaryString.length();
+    int num_sec = ceil((float)binaryString.length()/(float)64);
+    string binary_64 = "";
+    while (num_sec > 0){
+        if(num_sec == 1){
+            binary_64 = bitset<64>(binaryString.substr(0,curr_pos)).to_string() + binary_64;
+        } else {
+            curr_pos -= 64;
+            binary_64 = bitset<64>(binaryString.substr(curr_pos,64)).to_string() + binary_64;
+        }
+        num_sec--;
     }
-    return binaryString;
+
+    return binary_64;
 }
 
 string BinaryStringToText(string binaryString) {
@@ -305,13 +316,15 @@ string BinaryStringToText(string binaryString) {
 }
 
 string generateCipher(string binary_text, string encryption_round_keys[]){
-	    string cipher_text = "";
+	string cipher_text = "";
     int start_substr = 0;
     string sub_bin = binary_text.substr(start_substr,64);
-    // Applying the algo
+    cout << "Start encrypt" << endl;
+	// Applying the algo
     string sub_cipher = DES_encryption(sub_bin,encryption_round_keys);
     cipher_text += sub_cipher;
     start_substr += 64;
+	cout << "Started encrypt" << endl;
 
     while(start_substr < binary_text.length()){
         sub_bin = binary_text.substr(start_substr,64);
@@ -321,7 +334,7 @@ string generateCipher(string binary_text, string encryption_round_keys[]){
         cipher_text += sub_cipher;
         start_substr += 64;
     }
-
+	cout << "Finished encrypt" << endl;
 	return cipher_text;
 }
 

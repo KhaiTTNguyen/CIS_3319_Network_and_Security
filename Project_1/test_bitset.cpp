@@ -2,11 +2,16 @@
 #include <iostream>
 #include <string>
 #include <cmath>
+#include <bitset>
+#include <sstream>
+
+
 using namespace std;
 // Array to hold 16 keys
 string round_keys[16];
 // String to hold the plain text
-string pt;
+
+
 // Function to convert a number in decimal to binary
 string convertDecimalToBinary(int decimal)
 {
@@ -58,19 +63,19 @@ string shift_left_twice(string key_chunk){
     return key_chunk; 
 }
 // Function to compute xor between two strings
-string Xor(string a, string b){ 
-	string result = ""; 
-	int size = b.size();
-	for(int i = 0; i < size; i++){ 
-		if(a[i] != b[i]){ 
-			result += "1"; 
-		}
-		else{ 
-			result += "0"; 
-		} 
-	} 
-	return result; 
+string Xor_32(string a, string b){ 
+	
+	auto result = std::bitset<32>(a) ^ std::bitset<32>(b);
+	return result.to_string(); 
 } 
+
+// Function to compute xor between two strings
+string Xor_48(string a, string b){ 
+	
+	auto result = std::bitset<48>(a) ^ std::bitset<48>(b);	
+	return result.to_string(); 
+} 
+
 // Function to generate the 16 keys.
 void generate_keys(string key){
 	// The PC1 table
@@ -128,7 +133,7 @@ void generate_keys(string key){
 
 }
 // Implementing the algorithm
-string DES(){ 
+string DES(string pt){ 
 	// The initial permutation table 
 	int initial_permutation[64] = { 
 	58,50,42,34,26,18,10,2, 
@@ -233,7 +238,7 @@ string DES(){
     	for(int i = 0; i < 48; i++) { 
       		right_expanded += right[expansion_table[i]-1]; 
     };  // 3.3. The result is xored with a key
-		string xored = Xor(round_keys[i], right_expanded);  
+		string xored = Xor_48(round_keys[i], right_expanded);  
 		string res = ""; 
 		// 3.4. The result is divided into 8 equal parts and passed 
 		// through 8 substitution boxes. After passing through a 
@@ -254,7 +259,7 @@ string DES(){
 			perm2 += res[permutation_tab[i]-1]; 
 		}
 		// 3.6. The result is xored with the left half
-		xored = Xor(perm2, left);
+		xored = Xor_32(perm2, left);
 		// 3.7. The left and the right parts of the plain text are swapped 
 		left = xored; 
 		if(i < 15){ 
@@ -273,16 +278,150 @@ string DES(){
 	//And we finally get the cipher text
 	return ciphertext; 
 }
+
+string TextToBinaryString(string words) {
+    string binaryString = "";
+    for (char& _char : words) {
+        binaryString +=bitset<8>(_char).to_string();
+	}
+
+    int curr_pos = binaryString.length();
+    int num_sec = ceil((float)binaryString.length()/(float)64);
+    string binary_64 = "";
+    while (num_sec > 0){
+        if(num_sec == 1){
+            binary_64 = bitset<64>(binaryString.substr(0,curr_pos)).to_string() + binary_64;
+        } else {
+            curr_pos -= 64;
+            binary_64 = bitset<64>(binaryString.substr(curr_pos,64)).to_string() + binary_64;
+        }
+        num_sec--;
+    }
+
+    // chop strings into sections of 64 bits
+    // 
+
+    return binary_64;
+
+	//     string binaryString = "";
+    // for (char& _char : words) {
+    //     binaryString +=bitset<8>(_char).to_string();
+	// }
+	// if (binaryString.length() % 64 != 0){
+	// 	binaryString += '1';
+	// }
+	// while (binaryString.length() % 64 != 0){
+    //     binaryString += '0';
+    // }
+    // return binaryString;
+}
+
+string BinaryStringToText(string binaryString) {
+    string text = "";
+    stringstream sstream(binaryString);
+    while (sstream.good())
+    {
+        bitset<8> bits;
+        sstream >> bits;
+        text += char(bits.to_ulong());
+    }
+
+    return text;
+}
+
+
 int main(){ 
 	// A 64 bit key
 	string key= "1010101010111011000010010001100000100111001101101100110011011101";
-	// A block of plain text of 64 bits
-	pt= "1010101111001101111001101010101111001101000100110010010100110110";
 	// Calling the function to generate 16 keys
   	generate_keys(key); 
-    cout<<"Plain text: "<<pt<<endl; 
-	// Applying the algo
-    string ct= DES(); 
-    cout<<"Ciphertext: "<<ct<<endl;
-} 
 
+	// A block of plain text of 64 bits
+
+    // convert ASCII text to binary text
+    string testText = "Hi! Khai Nguyen Tran is struggling with DES. He is trying to implement SHA. Tuan Huynh is working on HMAC"; // Nguyen Tran is trying to code up DES. Tuan Huynh is suffereing";
+    string binary_text = TextToBinaryString(testText);
+    cout << "Binary string: " << binary_text << "\n";
+    
+    /*----------------------------Encrypting-----------------------------*/
+    string cipher_text = "";
+    int start_substr = 0;
+    string sub_bin = binary_text.substr(start_substr,64);
+    // Applying the algo
+    string sub_cipher = DES(sub_bin); 
+    cipher_text += sub_cipher;
+    start_substr += 64;
+
+    while(start_substr < binary_text.length()){
+        sub_bin = binary_text.substr(start_substr,64);
+        
+        // Applying the algo
+        sub_cipher = DES(sub_bin); 
+        cipher_text += sub_cipher;
+        start_substr += 64;
+    }
+
+    cout<<"Ciphertext: "<<cipher_text<<endl;
+	
+    // Reversing the round_keys array for decryption
+
+	int i = 15;
+	int j = 0;
+	while(i > j)
+	{
+		string temp = round_keys[i];
+		round_keys[i] = round_keys[j];
+		round_keys[j] = temp;
+		i--;
+		j++;
+	}
+	
+    /*----------------------------Decrypting ------------------------*/
+    string decrypted = "";
+    int start_of_substr = 0;
+    string sub_cip = cipher_text.substr(start_of_substr,64);
+    // Applying the algo
+    string sub_origin = DES(sub_cip); 
+    decrypted += sub_origin;
+    start_of_substr += 64;
+
+    while(start_of_substr < cipher_text.length()){
+        sub_cip = cipher_text.substr(start_of_substr,64);
+        // Applying the algo
+        sub_origin = DES(sub_cip); 
+        decrypted += sub_origin;
+        start_of_substr += 64;
+    }
+    
+    
+	cout<<"Decrypted text:"<<decrypted<<endl;
+	
+    cout << "Result binary string to text: " << BinaryStringToText(decrypted) << endl;
+    
+    // cout << "Original text: " << BinaryStringToText(binary_text) << endl;
+
+
+
+	/*
+	
+#include <stdio.h>
+#include <string>
+#include <bitset>
+#include <iostream>
+
+int main()
+{
+    std::string s1 = "0101010101010101010101010101010101010101010101010101010101010101";
+    std::string s2 = "1010101010101010101010101010101010101010101010101010101010101010";
+
+    auto result = std::bitset<64>(s1) ^ std::bitset<64>(s2);
+    std::cout << result << std::endl;
+    
+    auto revert = std::bitset<64>(s1) ^ result;
+    std::cout << revert << std::endl;
+    
+}
+	
+	
+	*/
+} 

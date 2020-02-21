@@ -44,8 +44,8 @@ string convertDecimalToBinary(int decimal);
 int convertBinaryToDecimal(string binary);
 string shift_left_once(string key_chunk);
 string shift_left_twice(string key_chunk);
-string Xor(string a, string b);
-
+string Xor_32(string a, string b);
+string Xor_48(string a, string b);
 string DES_encryption(string plain_text, string round_keys[]);
 string TextToBinaryString(string words);
 string BinaryStringToText(string binaryString);
