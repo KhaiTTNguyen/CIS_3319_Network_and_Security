@@ -59,7 +59,7 @@ string BinaryStringToText(string binaryString);
 string generateCipher(string binary_text, string encryption_round_keys[]);
 string generatePlain (string cipher_text, string decryption_round_keys[]);
 string HextoBinary(string hex);
-
+string BinaryToHex(string bin);
 
 
 #endif

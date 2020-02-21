@@ -26,13 +26,17 @@
     std::string key = "key";
     std::string sha2hmac = hmac<SHA256>(msg, key);
 
+
     // create HMAC 
-    cout << "SHA256 HMAC: " << sha2hmac << endl;
-    cout << "String length " << sha2hmac.length() << endl;
+    // cout << "SHA256 HMAC: " << sha2hmac << endl;
+    // cout << "String length " << sha2hmac.length() << endl;
 
     // convert hex to binary && convert string 
     string binText = TextToBinaryString(msg);
     string binHMAC = HextoBinary(sha2hmac);
+
+    cout << "Text before encrypt " << msg << endl;
+    cout << "msg length " << msg.length() << endl;
 
     // attach HMAC to converted string
     string binToEncrypt = binText + binHMAC; 
@@ -42,18 +46,35 @@
 
     // DES decrypt
     string decrypted = generatePlain(cipherText,decryption_round_keys);
-        
+    
+    cout << endl;
+    
     // cut off HMAC
     string receivedHMAC = decrypted.substr(decrypted.length() - 256, 256); 
     string assumedBinText = decrypted.substr(0, decrypted.length() - receivedHMAC.length());
-    // create HMAC 
+    
 
+    // create HMAC 
     string assumedPlainText = BinaryStringToText(assumedBinText);
 
-    std::string sha2hmac_new = hmac<SHA256>(assumedPlainText, key);
+    cout << "assumed plaintext  after decrypt " << assumedPlainText << endl;
+    cout << "assumedPlaintext length " << assumedPlainText.length() << endl;
+    /*
+    std::string msg = "The quick brown fox jumps over the lazy dog";
+    std::string key = "key";
+    std::string sha2hmac = hmac<SHA256>(msg, key);
+    */
+    cout << "HMAC " << sha2hmac << endl;
+    //cout << "received HMAC" << BinaryToHex(receivedHMAC) << endl;
+    
+    // std::string sha2hmac_new = hmac<SHA256>(assumedPlainText,key);
     // compare
-    cout << sha2hmac << endl;
-    cout << sha2hmac_new << endl;
+    // cout << receivedHMAC << endl;
+
+    
+
+
+    //std::string sha2hmac = hmac<SHA256>(msg, key);
 
     return 0; 
 } 

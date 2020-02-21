@@ -318,12 +318,10 @@ string generateCipher(string binary_text, string encryption_round_keys[]){
 	string cipher_text = "";
     int start_substr = 0;
     string sub_bin = binary_text.substr(start_substr,64);
-    cout << "Start encrypt" << endl;
 	// Applying the algo
     string sub_cipher = DES_encryption(sub_bin,encryption_round_keys);
     cipher_text += sub_cipher;
     start_substr += 64;
-	cout << "Started encrypt" << endl;
 
     while(start_substr < binary_text.length()){
         sub_bin = binary_text.substr(start_substr,64);
@@ -333,7 +331,6 @@ string generateCipher(string binary_text, string encryption_round_keys[]){
         cipher_text += sub_cipher;
         start_substr += 64;
     }
-	cout << "Finished encrypt" << endl;
 	return cipher_text;
 }
 
@@ -357,7 +354,6 @@ string generatePlain (string cipher_text, string decryption_round_keys[]){
 	return decrypted;
 }
 
-
 string HextoBinary(string hex){
 
 	string textString = "";
@@ -368,26 +364,7 @@ string HextoBinary(string hex){
 		textString.push_back(chr);
 	}
 
-    
-    string binaryString = "";
-    for (char& _char : textString) {
-        binaryString +=bitset<8>(_char).to_string();
-	}
-
-    int curr_pos = binaryString.length();
-    int num_sec = ceil((float)binaryString.length()/(float)64);
-    string binary_64 = "";
-    while (num_sec > 0){
-        if(num_sec == 1){
-            binary_64 = bitset<64>(binaryString.substr(0,curr_pos)).to_string() + binary_64;
-        } else {
-            curr_pos -= 64;
-            binary_64 = bitset<64>(binaryString.substr(curr_pos,64)).to_string() + binary_64;
-        }
-        num_sec--;
-    }
-    return binary_64;
-    
+    return TextToBinaryString(textString);    
 }
 
 
