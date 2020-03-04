@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
         cout << endl;
         cout << "Shared DES key is :" << key << endl;
         // cout << "Cipher text is " << string(msg) << endl;
-        cout << "Correct! Received HMAC is " << receivedHMAC << endl;
+        cout << "Received HMAC is " << receivedHMAC << endl;
         cout << "Client Plain text message is: " << BinaryStringToText(assumedBinText) << endl;
     }
 

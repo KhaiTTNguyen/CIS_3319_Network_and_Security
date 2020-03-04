@@ -35,8 +35,8 @@
     string binText = TextToBinaryString(msg);
     string binHMAC = HextoBinary(sha2hmac);
 
-    cout << "Text before encrypt " << msg << endl;
-    cout << "msg length " << msg.length() << endl;
+    // cout << "Text before encrypt " << msg << endl;
+    // cout << "msg length " << msg.length() << endl;
 
     // attach HMAC to converted string
     string binToEncrypt = binText + binHMAC; 
@@ -44,6 +44,7 @@
     // DES encrypt 
     string cipherText = generateCipher(binToEncrypt, encryption_round_keys);
 
+    /*--------------------------------------------------------------------*/
     // DES decrypt
     string decrypted = generatePlain(cipherText,decryption_round_keys);
     
