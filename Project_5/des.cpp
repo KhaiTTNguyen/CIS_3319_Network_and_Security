@@ -1,140 +1,15 @@
-// Including dependancies
-#include <iostream>
-#include <string>
-#include <cmath>
-#include <bitset>
-#include <sstream>
+// Khai Nguyen
+// Filename: function.cpp
+// Usage: to build functions
+
+#include "header.h"
 
 
-using namespace std;
-// Array to hold 16 keys
-string round_keys[16];
-// String to hold the plain text
+// https://www.educative.io/edpresso/how-to-implement-the-des-algorithm-in-cpp
 
 
-// Function to convert a number in decimal to binary
-string convertDecimalToBinary(int decimal)
-{
-	string binary;
-    while(decimal != 0) {
-		binary = (decimal % 2 == 0 ? "0" : "1") + binary; 
-		decimal = decimal/2;
-	}
-	while(binary.length() < 4){
-		binary = "0" + binary;
-	}
-    return binary;
-}
-// Function to convert a number in binary to decimal
-int convertBinaryToDecimal(string binary)
-{
-    int decimal = 0;
-	int counter = 0;
-	int size = binary.length();
-	for(int i = size-1; i >= 0; i--)
-	{
-    	if(binary[i] == '1'){
-        	decimal += pow(2, counter);
-    	}
-    counter++;
-	}
-	return decimal;
-}
-// Function to do a circular left shift by 1
-string shift_left_once(string key_chunk){ 
-    string shifted="";  
-        for(int i = 1; i < 28; i++){ 
-            shifted += key_chunk[i]; 
-        } 
-        shifted += key_chunk[0];   
-    return shifted; 
-} 
-// Function to do a circular left shift by 2
-string shift_left_twice(string key_chunk){ 
-    string shifted=""; 
-    for(int i = 0; i < 2; i++){ 
-        for(int j = 1; j < 28; j++){ 
-            shifted += key_chunk[j]; 
-        } 
-        shifted += key_chunk[0]; 
-        key_chunk= shifted; 
-        shifted =""; 
-    } 
-    return key_chunk; 
-}
-// Function to compute xor between two strings
-string Xor_32(string a, string b){ 
-	
-	auto result = std::bitset<32>(a) ^ std::bitset<32>(b);
-	return result.to_string(); 
-} 
-
-// Function to compute xor between two strings
-string Xor_48(string a, string b){ 
-	
-	auto result = std::bitset<48>(a) ^ std::bitset<48>(b);	
-	return result.to_string(); 
-} 
-
-// Function to generate the 16 keys.
-void generate_keys(string key){
-	// The PC1 table
-	int pc1[56] = {
-	57,49,41,33,25,17,9, 
-	1,58,50,42,34,26,18, 
-	10,2,59,51,43,35,27, 
-	19,11,3,60,52,44,36,		 
-	63,55,47,39,31,23,15, 
-	7,62,54,46,38,30,22, 
-	14,6,61,53,45,37,29, 
-	21,13,5,28,20,12,4 
-	};
-	// The PC2 table
-	int pc2[48] = { 
-	14,17,11,24,1,5, 
-	3,28,15,6,21,10, 
-	23,19,12,4,26,8, 
-	16,7,27,20,13,2, 
-	41,52,31,37,47,55, 
-	30,40,51,45,33,48, 
-	44,49,39,56,34,53, 
-	46,42,50,36,29,32 
-	}; 
-	// 1. Compressing the key using the PC1 table
-	string perm_key =""; 
-	for(int i = 0; i < 56; i++){ 
-		perm_key+= key[pc1[i]-1]; 
-	} 
-	// 2. Dividing the key into two equal halves
-	string left= perm_key.substr(0, 28); 
-	string right= perm_key.substr(28, 28); 
-	for(int i=0; i<16; i++){ 
-		// 3.1. For rounds 1, 2, 9, 16 the key_chunks
-		// are shifted by one.
-		if(i == 0 || i == 1 || i==8 || i==15 ){
-			left= shift_left_once(left); 
-			right= shift_left_once(right);
-		} 
-		// 3.2. For other rounds, the key_chunks
-		// are shifted by two
-		else{
-			left= shift_left_twice(left); 
-			right= shift_left_twice(right);
-		}
-	// Combining the two chunks
-	string combined_key = left + right;
-	string round_key = ""; 
-	// Finally, using the PC2 table to transpose the key bits
-	for(int i = 0; i < 48; i++){ 
-		round_key += combined_key[pc2[i]-1]; 
-	}   
-	round_keys[i] = round_key; 
-	} 
-
-}
-// Implementing the algorithm
-string DES(string pt){ 
-	// The initial permutation table 
+string DES_encryption(string plain_text, string round_keys[]){
+    // The initial permutation table 
 	int initial_permutation[64] = { 
 	58,50,42,34,26,18,10,2, 
 	60,52,44,36,28,20,12,4, 
@@ -226,18 +101,20 @@ string DES(string pt){
 	//1. Applying the initial permutation
   	string perm = ""; 
 	for(int i = 0; i < 64; i++){ 
-		perm += pt[initial_permutation[i]-1]; 
+		perm += plain_text[initial_permutation[i]-1]; 
 	}  
+
 	// 2. Dividing the result into two equal halves 
 	string left = perm.substr(0, 32); 
 	string right = perm.substr(32, 32);
 	// The plain text is encrypted 16 times  
-	for(int i=0; i<16; i++) { 
+	for(int i=0; i<ITERATION; i++) { 
     	string right_expanded = ""; 
 		// 3.1. The right half of the plain text is expanded
     	for(int i = 0; i < 48; i++) { 
       		right_expanded += right[expansion_table[i]-1]; 
-    };  // 3.3. The result is xored with a key
+    	}  	
+		// 3.3. The result is xored with a key
 		string xored = Xor_48(round_keys[i], right_expanded);  
 		string res = ""; 
 		// 3.4. The result is divided into 8 equal parts and passed 
@@ -279,6 +156,128 @@ string DES(string pt){
 	return ciphertext; 
 }
 
+// Function to convert a number in decimal to binary
+string convertDecimalToBinary(int decimal)
+{
+	string binary;
+    while(decimal != 0) {
+		binary = (decimal % 2 == 0 ? "0" : "1") + binary; 
+		decimal = decimal/2;
+	}
+	while(binary.length() < 4){
+		binary = "0" + binary;
+	}
+    return binary;
+}
+// Function to convert a number in binary to decimal
+int convertBinaryToDecimal(string binary)
+{
+    int decimal = 0;
+	int counter = 0;
+	int size = binary.length();
+	for(int i = size-1; i >= 0; i--)
+	{
+    	if(binary[i] == '1'){
+        	decimal += pow(2, counter);
+    	}
+    counter++;
+	}
+	return decimal;
+}
+// Function to do a circular left shift by 1
+string shift_left_once(string key_chunk){ 
+    string shifted="";  
+        for(int i = 1; i < 28; i++){ 
+            shifted += key_chunk[i]; 
+        } 
+        shifted += key_chunk[0];   
+    return shifted; 
+} 
+// Function to do a circular left shift by 2
+string shift_left_twice(string key_chunk){ 
+    string shifted=""; 
+    for(int i = 0; i < 2; i++){ 
+        for(int j = 1; j < 28; j++){ 
+            shifted += key_chunk[j]; 
+        } 
+        shifted += key_chunk[0]; 
+        key_chunk= shifted; 
+        shifted =""; 
+    } 
+    return key_chunk; 
+}
+// Function to compute xor between two strings
+string Xor_32(string a, string b){ 
+	
+	auto result = std::bitset<32>(a) ^ std::bitset<32>(b);	
+	return result.to_string(); 
+} 
+
+string Xor_48(string a, string b){ 
+	
+	auto result = std::bitset<48>(a) ^ std::bitset<48>(b);
+	return result.to_string(); 
+} 
+
+
+// Function to generate the 16 keys.
+void generate_keys(string key, string round_keys[]){
+	// The PC1 table
+	int pc1[56] = {
+	57,49,41,33,25,17,9, 
+	1,58,50,42,34,26,18, 
+	10,2,59,51,43,35,27, 
+	19,11,3,60,52,44,36,		 
+	63,55,47,39,31,23,15, 
+	7,62,54,46,38,30,22, 
+	14,6,61,53,45,37,29, 
+	21,13,5,28,20,12,4 
+	};
+	// The PC2 table
+	int pc2[48] = { 
+	14,17,11,24,1,5, 
+	3,28,15,6,21,10, 
+	23,19,12,4,26,8, 
+	16,7,27,20,13,2, 
+	41,52,31,37,47,55, 
+	30,40,51,45,33,48, 
+	44,49,39,56,34,53, 
+	46,42,50,36,29,32 
+	}; 
+	// 1. Compressing the key using the PC1 table
+	string perm_key =""; 
+	for(int i = 0; i < 56; i++){ 
+		perm_key+= key[pc1[i]-1]; 
+	} 
+	// 2. Dividing the key into two equal halves
+	string left= perm_key.substr(0, 28); 
+	string right= perm_key.substr(28, 28); 
+	for(int i=0; i<ITERATION; i++){ 
+		// 3.1. For rounds 1, 2, 9, 16 the key_chunks
+		// are shifted by one.
+		if(i == 0 || i == 1 || i==8 || i==15 ){
+			left= shift_left_once(left); 
+			right= shift_left_once(right);
+		} 
+		// 3.2. For other rounds, the key_chunks
+		// are shifted by two
+		else{
+			left= shift_left_twice(left); 
+			right= shift_left_twice(right);
+		}
+        // Combining the two chunks
+        string combined_key = left + right;
+        string round_key = ""; 
+        // Finally, using the PC2 table to transpose the key bits
+        for(int i = 0; i < 48; i++){ 
+            round_key += combined_key[pc2[i]-1]; 
+        }   
+	    round_keys[i] = round_key; 
+	} 
+
+}
+
+
 string TextToBinaryString(string words) {
     string binaryString = "";
     for (char& _char : words) {
@@ -297,6 +296,7 @@ string TextToBinaryString(string words) {
         }
         num_sec--;
     }
+
     return binary_64;
 }
 
@@ -309,64 +309,15 @@ string BinaryStringToText(string binaryString) {
         sstream >> bits;
         text += char(bits.to_ulong());
     }
-
     return text;
 }
 
-string HextoBinary(string hex){
-
-	string textString = "";
-	for (int i = 0; i < hex.length(); i+=2)
-	{
-		string byte = hex.substr(i, 2);
-		char chr = (char)(int)strtol(byte.c_str(), NULL, 16);
-		textString.push_back(chr);
-	}
-
-    
-    string binaryString = "";
-    for (char& _char : textString) {
-        binaryString +=bitset<8>(_char).to_string();
-	}
-
-    int curr_pos = binaryString.length();
-    int num_sec = ceil((float)binaryString.length()/(float)64);
-    string binary_64 = "";
-    while (num_sec > 0){
-        if(num_sec == 1){
-            binary_64 = bitset<64>(binaryString.substr(0,curr_pos)).to_string() + binary_64;
-        } else {
-            curr_pos -= 64;
-            binary_64 = bitset<64>(binaryString.substr(curr_pos,64)).to_string() + binary_64;
-        }
-        num_sec--;
-    }
-    return binary_64;
-    
-}
-
-int main(){ 
-	// A 64 bit key
-	string key= "1010101010111011000010010001100000100111001101101100110011011101";
-	// Calling the function to generate 16 keys
-  	generate_keys(key); 
-
-	cout << "Converting to in :" << HextoBinary("f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8") << endl;
-
-	// A block of plain text of 64 bits
-
-
-    // convert ASCII text to binary text
-    string testText = "Hi! Khai Nguyen Tran is struggling with DES. He is trying to implement SHA. Tuan Huynh is working on HMAC"; // Nguyen Tran is trying to code up DES. Tuan Huynh is suffereing";
-    string binary_text = TextToBinaryString(testText);
-    cout << "Binary string: " << binary_text << "\n";
-    
-    /*----------------------------Encrypting-----------------------------*/
-    string cipher_text = "";
+string generateCipher(string binary_text, string encryption_round_keys[]){
+	string cipher_text = "";
     int start_substr = 0;
     string sub_bin = binary_text.substr(start_substr,64);
-    // Applying the algo
-    string sub_cipher = DES(sub_bin); 
+	// Applying the algo
+    string sub_cipher = DES_encryption(sub_bin,encryption_round_keys);
     cipher_text += sub_cipher;
     start_substr += 64;
 
@@ -374,53 +325,29 @@ int main(){
         sub_bin = binary_text.substr(start_substr,64);
         
         // Applying the algo
-        sub_cipher = DES(sub_bin); 
+        sub_cipher = DES_encryption(sub_bin,encryption_round_keys);
         cipher_text += sub_cipher;
         start_substr += 64;
     }
+	return cipher_text;
+}
 
-    cout<<"Ciphertext: "<<cipher_text<<endl;
-	
-    // Reversing the round_keys array for decryption
-
-	int i = 15;
-	int j = 0;
-	while(i > j)
-	{
-		string temp = round_keys[i];
-		round_keys[i] = round_keys[j];
-		round_keys[j] = temp;
-		i--;
-		j++;
-	}
-	
-    /*----------------------------Decrypting ------------------------*/
-    string decrypted = "";
+string generatePlain (string cipher_text, string decryption_round_keys[]){
+	string decrypted;
     int start_of_substr = 0;
     string sub_cip = cipher_text.substr(start_of_substr,64);
     // Applying the algo
-    string sub_origin = DES(sub_cip); 
+    string sub_origin = DES_encryption(sub_cip,decryption_round_keys);
     decrypted += sub_origin;
     start_of_substr += 64;
 
     while(start_of_substr < cipher_text.length()){
         sub_cip = cipher_text.substr(start_of_substr,64);
         // Applying the algo
-        sub_origin = DES(sub_cip); 
+        sub_origin = DES_encryption(sub_cip,decryption_round_keys); 
         decrypted += sub_origin;
         start_of_substr += 64;
     }
-    
-    
-	cout<<"Decrypted text:"<<decrypted<<endl;
-	
-    cout << "Result binary string to text: " << BinaryStringToText(decrypted) << endl;
-    
-    // cout << "Original text: " << BinaryStringToText(binary_text) << endl;
 
-
-
-	/*
-	SHA-256 : SHA-256 is a member of SHA-2 cryptographic hash functions family, which usually generates 256 bits or 32 bytes HASH Code from an input message.
-	*/
-} 
+	return decrypted;
+}
