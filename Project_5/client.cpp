@@ -36,8 +36,8 @@ int main(int argc, char *argv[])
     // char *serverIp = argv[1]; int port = atoi(argv[2]); 
     // char *serverIp_2 = argv[3]; int port_2 = atoi(argv[4]); 
     
-    char *serverIp = "127.0.0.1"; int port = 8888; 
-    char *serverIp_2 = "127.0.0.1"; int port_2 = 9999; 
+    char *serverIp = "127.0.0.1"; int port = 8888;      // tgs
+    char *serverIp_2 = "127.0.0.1"; int port_2 = 9999;  // server
 
     //create a message buffer 
     char msg[MAX_BUFFER_LENGTH]; 
@@ -58,8 +58,8 @@ int main(int argc, char *argv[])
     int clientSd_2 = socket(AF_INET, SOCK_STREAM, 0);
     
     //try to connect...
-    int status = connect(clientSd,(sockaddr*) &sendSockAddr, sizeof(sendSockAddr));
-    int status_2 = connect(clientSd_2,(sockaddr*) &sendSockAddr_2, sizeof(sendSockAddr_2));
+    int status = connect(clientSd,(sockaddr*) &sendSockAddr, sizeof(sendSockAddr));             // for tgs
+    int status_2 = connect(clientSd_2,(sockaddr*) &sendSockAddr_2, sizeof(sendSockAddr_2));     // for server
     
     if(status < 0){cout<<"Error connecting to socket_1!"<<endl; exit(0);}
     if(status_2 < 0){cout<<"Error connecting to socket_2!"<<endl; exit(0);}
@@ -68,8 +68,20 @@ int main(int argc, char *argv[])
     cout << "Connected to the server!" << endl;   
 
     int bytesRead, bytesWritten = 0;
-    struct timeval start1, end1;
-    gettimeofday(&start1, NULL);
+
+    /*-------------------------------Kerberos Authentication----------------------------*/
+    /*  Phase 1: IDc, ID tgs, Timestamp_1 */
+    time_t ts_1 = time(NULL);
+    string phase_1 = string(ID_c) + string(ID_tgs) + to_string(ts_1);
+    strcpy(msg, phase_1.c_str());
+    printf("%s\n", msg);
+    bytesWritten += send(clientSd, (char*)&msg, strlen(msg), 0); 
+
+
+    /* Phase 2: as_tgs */
+    /* Phase 3: */
+
+    /*---------------------------K_Auth done-------------------------*/
     while(1)
     {
         /*------------------------ Encryption ----------------------------*/

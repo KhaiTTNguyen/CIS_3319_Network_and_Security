@@ -11,8 +11,8 @@ int main(int argc, char *argv[])
         exit(0);
     }
     //grab the port number
-    int port = atoi(argv[1]);
-    
+    // int port = atoi(argv[1]);
+    int port = 9999;
     // ---------------------- load the key for DES -------------------------
     FILE * fp;
     // Open the file  

@@ -32,11 +32,15 @@
 #include <fstream>
 #include <bitset>
 #include <sstream>
+#include <time.h>
 
 using namespace std;
 
 #define MAX_BUFFER_LENGTH 1500
 #define ITERATION 16
+#define ID_c "CIS3319USERID"
+#define ID_v "CIS3319SERVERID"
+#define ID_tgs "CIS3319TGSID"
 
 void generate_keys(string key, string round_keys[]);
 string convertDecimalToBinary(int decimal);
@@ -52,3 +56,11 @@ string generateCipher(string binary_text, string encryption_round_keys[]);
 string generatePlain (string cipher_text, string decryption_round_keys[]);
 
 #endif
+
+/*
+printf("%s\n", ID_tgs);
+    printf("%s\n", ID_C);
+    string s = string(ID_C) + string(ID_tgs);
+    cout << s << endl;
+    cout << s.substr(strlen(ID_C), strlen(ID_tgs));
+*/
