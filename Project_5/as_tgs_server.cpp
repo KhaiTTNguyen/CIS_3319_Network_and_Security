@@ -16,7 +16,8 @@ int main(int argc, char *argv[])
     //grab the port number
     // int port = atoi(argv[1]);   
     int port = 8888; // for AD_c
-    
+    string AD_c = string("127.0.0.1") + to_string(port);
+
     // ---------------------- load the key for DES -------------------------
     FILE * fp = fopen(argv[2], "r");
     if (fp == NULL) { printf("Could not open file %s", argv[2]); return 0; } 
@@ -81,14 +82,25 @@ int main(int argc, char *argv[])
     cout << "Connected with client!" << endl;
 
     //also keep track of the amount of data sent as well
-    int bytesRead, bytesWritten = 0;
+    long bytesRead, bytesWritten = 0;
 
     /*================================ Kerberos Auth =============================*/
     /*Phase 1*/
     bytesRead += recv(newSd, (char*)&msg, sizeof(msg), 0);
-    cout << "Message is " << string(msg) << endl;
-    
+    cout << "Message is " << (string)msg << endl; 
+
     /*Phase 2*/
+    time_t ts_2 = time(NULL);
+    string temp_ticket_tgs = string(K_c_tgs) + string(msg).substr(0,strlen(ID_c)) + AD_c + string(ID_tgs) + to_string(ts_2) + to_string(LIFE_TIME_2);
+    string ticket_tgs = generateCipher(TextToBinaryString(temp_ticket_tgs), encryption_round_keys);
+    memset(&msg, 0, sizeof(msg));
+    string temp_response = string(K_c_tgs) + string(ID_tgs) + to_string(ts_2) + to_string(LIFE_TIME_2) + ticket_tgs;
+    string response = generateCipher(TextToBinaryString(temp_response), encryption_round_keys);
+    strcpy(msg, response.c_str());
+    printf("Message is %s\n", msg);
+
+    // bytesWritten += send(newSd, (char*)&msg, strlen(msg), 0);
+
     // cout << string(msg).substr(strlen(ID_c), strlen(ID_tgs)) << endl;
 
 

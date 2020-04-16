@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
     struct timeval start1, end1;
     gettimeofday(&start1, NULL);
     //also keep track of the amount of data sent as well
-    int bytesRead, bytesWritten = 0;
+    long bytesRead, bytesWritten = 0;
     while(1)
     {
         //receive a message from the client (listen)

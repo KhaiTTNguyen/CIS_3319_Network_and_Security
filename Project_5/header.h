@@ -36,11 +36,13 @@
 
 using namespace std;
 
-#define MAX_BUFFER_LENGTH 1500
+#define MAX_BUFFER_LENGTH 8192
 #define ITERATION 16
 #define ID_c "CIS3319USERID"
 #define ID_v "CIS3319SERVERID"
 #define ID_tgs "CIS3319TGSID"
+#define LIFE_TIME_2 60 
+#define LIFE_TIME_4 86400
 
 void generate_keys(string key, string round_keys[]);
 string convertDecimalToBinary(int decimal);

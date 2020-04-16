@@ -4,11 +4,11 @@
 int main(int argc, char *argv[])
 {
     //we need 2 things: ip address and port number, in that order
-    if(argc != 4){  cerr << "Usage: ip_address port ip_address_2 port_2 key_file" << endl; exit(0); } 
+    if(argc != 6){  cerr << "Usage: ip_address port ip_address_2 port_2 key_file" << endl; exit(0); } 
 
     
     //----------------------- load the key for DES ------------------------
-    FILE * fp = fopen(argv[3], "r");
+    FILE * fp = fopen(argv[5], "r");
     if (fp == NULL) { 
         printf("Could not open file %s", argv[3]); 
         return 0; 
@@ -33,11 +33,11 @@ int main(int argc, char *argv[])
     //----------------------------------------------------------------------
 
     //grab the IP address and port number 
-    // char *serverIp = argv[1]; int port = atoi(argv[2]); 
-    // char *serverIp_2 = argv[3]; int port_2 = atoi(argv[4]); 
+    char *serverIp = argv[1]; int port = atoi(argv[2]);         // tgs
+    char *serverIp_2 = argv[3]; int port_2 = atoi(argv[4]);     // server
     
-    char *serverIp = "127.0.0.1"; int port = 8888;      // tgs
-    char *serverIp_2 = "127.0.0.1"; int port_2 = 9999;  // server
+    // char *serverIp = "127.0.0.1"; int port = 8888;      // tgs
+    // char *serverIp_2 = "127.0.0.1"; int port_2 = 9999;  // server
 
     //create a message buffer 
     char msg[MAX_BUFFER_LENGTH]; 
@@ -67,18 +67,18 @@ int main(int argc, char *argv[])
     cout << "Connected to the as_tgs_server!" << endl;
     cout << "Connected to the server!" << endl;   
 
-    int bytesRead, bytesWritten = 0;
+    long bytesRead, bytesWritten = 0;
 
     /*-------------------------------Kerberos Authentication----------------------------*/
     /*  Phase 1: IDc, ID tgs, Timestamp_1 */
     time_t ts_1 = time(NULL);
-    string phase_1 = string(ID_c) + string(ID_tgs) + to_string(ts_1);
-    strcpy(msg, phase_1.c_str());
-    printf("%s\n", msg);
+    string phase_1 = string(ID_c) + string(ID_tgs) + to_string(ts_1); strcpy(msg, phase_1.c_str());
     bytesWritten += send(clientSd, (char*)&msg, strlen(msg), 0); 
 
-
     /* Phase 2: as_tgs */
+    // bytesRead += recv(clientSd, (char*)&msg, sizeof(msg), 0);
+    // cout << "response from ags_server: " << BinaryStringToText(generatePlain(string(msg),decryption_round_keys)) << endl;
+
     /* Phase 3: */
 
     /*---------------------------K_Auth done-------------------------*/
